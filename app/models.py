@@ -14,3 +14,7 @@ class Task(SQLModel, table=True):
     status: str = "pending"
     reminder_sent: bool = False
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+    is_recurring: bool = False
+    recurrence_type: Optional[str] = None
+    recurrence_value: Optional[str] = None

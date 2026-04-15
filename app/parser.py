@@ -28,6 +28,9 @@ Return ONLY valid JSON using this schema:
   "due_at": "ISO-8601 datetime with timezone offset or null",
   "timezone": "{TIMEZONE}" or null,
   "task_id": integer or null
+  "is_recurring": true or false,
+  "recurrence_type": "daily | weekly | null",
+  "recurrence_value": "daily | monday | tuesday | wednesday | thursday | friday | saturday | sunday | null"
 }}
 
 Rules:
@@ -38,6 +41,10 @@ Rules:
 - If the user wants to see tasks, set intent=list_tasks
 - If the user wants to mark a task completed, set intent=mark_done
 - If the user wants to remove a task, set intent=delete_task
+- If the task repeats every day, set is_recurring=true, recurrence_type="daily", recurrence_value="daily"
+- If the task repeats weekly on a weekday, set is_recurring=true, recurrence_type="weekly", recurrence_value as the weekday in lowercase
+- If the task does not repeat, set is_recurring=false and recurrence fields to null
+- For recurring tasks, due_at should be the next upcoming occurrence in the user's timezone
 - If unclear, set intent=unknown
 - For create_task, clean the title
 - Remove filler phrases like "remind me to", "i need to", "need to", "please remind me to"

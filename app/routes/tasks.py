@@ -62,7 +62,7 @@ def mark_task_done(telegram_user_id: int, task_id: int) -> Task | None:
 
         task.status = "done"
         task.reminder_sent = True
-        
+
         session.add(task)
         session.commit()
         session.refresh(task)
@@ -90,6 +90,9 @@ def handle_natural_language_message(telegram_user_id: int, raw_input: str) -> di
             timezone=parsed.timezone or "Asia/Kolkata",
             status="pending",
             reminder_sent=False,
+            is_recurring=bool(parsed.is_recurring),
+            recurrence_type=parsed.recurrence_type,
+            recurrence_value=parsed.recurrence_value,
         )
 
         with get_session() as session:

@@ -160,10 +160,19 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
         if intent == "create_task":
             task = result["task"]
+
+            repeat_text = ""
+            if task.is_recurring:
+                if task.recurrence_type == "daily":
+                    repeat_text = "\nRepeats: daily"
+                elif task.recurrence_type == "weekly" and task.recurrence_value:
+                    repeat_text = f"\nRepeats: every {task.recurrence_value}"
+
             await update.message.reply_text(
                 f"Task created.\n"
                 f"{task.id} • {task.title}\n"
                 f"Due at: {format_local_time(task.due_at)}"
+                f"{repeat_text}"
             )
             return
 
@@ -175,9 +184,17 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
             lines = ["Your pending tasks:"]
             for task in tasks:
+
+                repeat_text = ""
+                if task.is_recurring:
+                    if task.recurrence_type == "daily":
+                        repeat_text = " | repeats: daily"
+                    elif task.recurrence_type == "weekly" and task.recurrence_value:
+                        repeat_text = f" | repeats: every {task.recurrence_value}"
+
                 lines.append(
                     f"{task.id} • {task.title}\n"
-                    f"   When: {format_local_time(task.due_at)}"
+                    f"   When: {format_local_time(task.due_at)}{repeat_text}"
                 )
 
             await update.message.reply_text("\n".join(lines))

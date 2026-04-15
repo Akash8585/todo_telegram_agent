@@ -1,5 +1,5 @@
 import asyncio
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -12,6 +12,44 @@ from app.db import get_session
 from app.models import Task
 
 scheduler = BackgroundScheduler(timezone="UTC")
+
+WEEKDAY_MAP = {
+    "monday": 0,
+    "tuesday": 1,
+    "wednesday": 2,
+    "thursday": 3,
+    "friday": 4,
+    "saturday": 5,
+    "sunday": 6,
+}
+
+
+def get_next_recurring_due(task: Task) -> datetime | None:
+    due_at = task.due_at
+    if due_at.tzinfo is None:
+        due_at = due_at.replace(tzinfo=UTC)
+
+    if not task.is_recurring:
+        return None
+
+    if task.recurrence_type == "daily":
+        return due_at + timedelta(days=1)
+
+    if task.recurrence_type == "weekly" and task.recurrence_value:
+        current_local = due_at.astimezone(ZoneInfo(TIMEZONE))
+        target_weekday = WEEKDAY_MAP.get(task.recurrence_value.lower())
+
+        if target_weekday is None:
+            return None
+
+        days_ahead = (target_weekday - current_local.weekday()) % 7
+        if days_ahead == 0:
+            days_ahead = 7
+
+        next_local = current_local + timedelta(days=days_ahead)
+        return next_local.astimezone(UTC)
+
+    return None
 
 
 def format_local_time(dt: datetime) -> str:
@@ -68,7 +106,15 @@ def check_due_tasks() -> None:
         for task in due_tasks:
             try:
                 asyncio.run(send_reminder_with_buttons(task.telegram_user_id, task))
-                task.reminder_sent = True
+
+                next_due = get_next_recurring_due(task)
+
+                if task.is_recurring and next_due:
+                    task.due_at = next_due
+                    task.reminder_sent = False
+                else:
+                    task.reminder_sent = True
+
             except TelegramError as e:
                 print(f"Telegram send failed for task {task.id}: {e}")
                 task.reminder_sent = True

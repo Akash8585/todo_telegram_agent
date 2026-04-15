@@ -9,3 +9,7 @@ class ParsedIntent(BaseModel):
     due_at: Optional[datetime] = None
     timezone: Optional[str] = None
     task_id: Optional[int] = None
+
+    is_recurring: Optional[bool] = False
+    recurrence_type: Optional[str] = None
+    recurrence_value: Optional[str] = None
