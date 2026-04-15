@@ -115,16 +115,27 @@ def check_due_tasks() -> None:
                 else:
                     task.reminder_sent = True
 
+                session.add(task)
+                session.commit()
+                print(f"[scheduler] reminder handled for task_id={task.id}")
+
             except TelegramError as e:
-                print(f"Telegram send failed for task {task.id}: {e}")
-                task.reminder_sent = True
+                session.rollback()
+                print(f"[scheduler] telegram send failed for task_id={task.id}: {e}")
+                t = session.get(Task, task.id)
+                if t:
+                    t.reminder_sent = True
+                    session.add(t)
+                    session.commit()
+
             except Exception as e:
-                print(f"Unexpected send error for task {task.id}: {e}")
-                task.reminder_sent = True
-
-            session.add(task)
-
-        session.commit()
+                session.rollback()
+                print(f"[scheduler] unexpected error for task_id={task.id}: {e}")
+                t = session.get(Task, task.id)
+                if t:
+                    t.reminder_sent = True
+                    session.add(t)
+                    session.commit()
 
 
 def start_scheduler() -> None:

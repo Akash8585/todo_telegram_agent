@@ -12,7 +12,24 @@ client = OpenAI(
 )
 
 
+def extract_json_block(text: str) -> str:
+    text = text.strip()
+
+    try:
+        json.loads(text)
+        return text
+    except json.JSONDecodeError:
+        pass
+
+    match = re.search(r"\{.*\}", text, re.DOTALL)
+    if match:
+        return match.group(0)
+
+    raise ValueError("No valid JSON object found in model response")
+
+
 def parse_user_message(user_input: str) -> dict:
+    print(f"[parser] input={user_input}")
     today = datetime.now(ZoneInfo(TIMEZONE)).strftime("%Y-%m-%d %H:%M:%S")
 
     system_prompt = f"""

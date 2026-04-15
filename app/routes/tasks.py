@@ -7,6 +7,12 @@ from app.models import Task
 from app.parser import parse_user_message
 from app.schemas import ParsedIntent
 
+def normalize_title(title: str) -> str:
+    title = " ".join(title.split()).strip()
+    if not title:
+        return title
+    return title[0].upper() + title[1:]
+
 
 def add_task_for_user(telegram_user_id: int, raw_input: str) -> Task:
     """Parse as a create-task message; raises ValueError if not a valid new task."""
@@ -82,9 +88,14 @@ def handle_natural_language_message(telegram_user_id: int, raw_input: str) -> di
         if due_at_utc <= datetime.now(UTC):
             raise ValueError("Task time is in the past")
 
+        print(
+            f"[task-create] user_id={telegram_user_id} title={parsed.title} "
+            f"due_at={parsed.due_at} recurring={parsed.is_recurring}"
+        )
+
         task = Task(
             telegram_user_id=telegram_user_id,
-            title=parsed.title.strip(),
+            title=normalize_title(parsed.title),
             raw_input=raw_input,
             due_at=due_at_utc,
             timezone=parsed.timezone or "Asia/Kolkata",
@@ -109,6 +120,7 @@ def handle_natural_language_message(telegram_user_id: int, raw_input: str) -> di
         if not parsed.task_id:
             raise ValueError("Missing task id")
 
+        print(f"[task-done] user_id={telegram_user_id} task_id={parsed.task_id}")
         task = mark_task_done(telegram_user_id, parsed.task_id)
         return {"intent": "mark_done", "task": task}
 
@@ -116,6 +128,7 @@ def handle_natural_language_message(telegram_user_id: int, raw_input: str) -> di
         if not parsed.task_id:
             raise ValueError("Missing task id")
 
+        print(f"[task-delete] user_id={telegram_user_id} task_id={parsed.task_id}")
         success = delete_task(telegram_user_id, parsed.task_id)
         return {"intent": "delete_task", "success": success}
 

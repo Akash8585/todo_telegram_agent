@@ -150,6 +150,16 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     telegram_user_id = update.effective_user.id
     raw_input = update.message.text.strip()
 
+    text = raw_input.lower().strip().rstrip("!.?")
+    if text in ("hi", "hello", "hey"):
+        await update.message.reply_text(
+            "Hey! 👋\nYou can tell me things like:\n"
+            "• today at 5 pm meet friends\n"
+            "• tomorrow 8 am gym\n"
+            "• show my tasks"
+        )
+        return
+
     try:
         result = handle_natural_language_message(
             telegram_user_id=telegram_user_id,
@@ -219,12 +229,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             return
 
         await update.message.reply_text(
-            "I did not understand that fully.\n\n"
-            " Try something like:\n"
-            "- today at 5 pm need to meet friends\n"
-            "- show my tasks\n"
-            "- mark task 2 as done\n"
-            "- delete task 3"
+            "Want me to set a reminder for something? 😊\n\n"
+            "Try:\n"
+            "• today at 5 pm meet friends\n"
+            "• tomorrow 8 am gym\n"
+            "• show my tasks"
         )
 
     except Exception as e:
@@ -238,12 +247,17 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
             )
             return
 
+        if "json" in msg or "parse" in msg:
+            await update.message.reply_text(
+                "I had trouble understanding that message. Please try a simpler format like:\n"
+                "- today at 5 pm meet friends\n"
+                "- tomorrow 8 am pay rent\n"
+                "- show my tasks"
+            )
+            return
+
         await update.message.reply_text(
-            "I could not understand that.\n\n"
-            "Try something like:\n"
-            "- today at 5 pm need to meet friends\n"
-            "- tomorrow 7 am gym\n"
-            "- show my tasks"
+            "Something went wrong while handling that request. Please try again."
         )
 
 
