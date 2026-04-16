@@ -71,6 +71,4 @@ Open `http://127.0.0.1:8000/` for a simple JSON status message.
 | `app/db.py` | Engine, sessions, `create_db_and_tables` |
 | `app/config.py` | Environment loading |
 
-## License
 
-Add a license file if you intend to distribute this project.
